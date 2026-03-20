@@ -1,0 +1,693 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>TradeViral Forex — Trading Journal</title>
+<link href="https://fonts.googleapis.com/css2?family=Syne:wght@400;500;700&family=IBM+Plex+Mono:wght@400;500&display=swap" rel="stylesheet">
+<script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.1/chart.umd.js"></script>
+<style>
+  *{box-sizing:border-box;margin:0;padding:0}
+  :root{
+    --bg:#0a0a0f;--bg2:#111118;--bg3:#1a1a24;--bg4:#22222e;
+    --border:#2a2a38;--border2:#3a3a50;
+    --text:#e8e8f0;--text2:#9090a8;--text3:#5a5a70;
+    --green:#00e676;--green2:#1a4a2e;--green3:#00c853;
+    --red:#ff5252;--red2:#4a1a1a;
+    --gold:#ffd600;
+    --blue:#448aff;--blue2:#1a2a4a;
+    --purple:#ce93d8;--purple2:#2a1a3a;
+  }
+  html,body{height:100%}
+  body{font-family:'Syne',sans-serif;background:var(--bg);color:var(--text);min-height:100vh;font-size:14px}
+  .mono{font-family:'IBM Plex Mono',monospace}
+
+  /* HEADER */
+  .header{background:var(--bg2);border-bottom:1px solid var(--border);padding:0 28px;display:flex;align-items:center;justify-content:space-between;height:58px;position:sticky;top:0;z-index:200}
+  .logo{display:flex;flex-direction:column;line-height:1.1}
+  .logo-main{font-size:18px;font-weight:700;letter-spacing:-0.5px}
+  .logo-main span{color:var(--green)}
+  .logo-sub{font-size:10px;font-weight:500;color:var(--text3);letter-spacing:1.5px;text-transform:uppercase}
+  .nav{display:flex;gap:4px}
+  .nav-btn{background:none;border:none;color:var(--text2);padding:7px 16px;border-radius:6px;cursor:pointer;font-family:'Syne',sans-serif;font-size:13px;font-weight:500;transition:all 0.15s}
+  .nav-btn:hover{color:var(--text);background:var(--bg3)}
+  .nav-btn.active{color:var(--green);background:var(--green2)}
+  .add-btn{background:var(--green);color:#000;border:none;padding:8px 18px;border-radius:6px;cursor:pointer;font-family:'Syne',sans-serif;font-size:13px;font-weight:700;transition:all 0.15s}
+  .add-btn:hover{background:var(--green3);transform:translateY(-1px)}
+
+  /* CONTENT */
+  .content{padding:28px;max-width:1440px;width:100%;margin:0 auto}
+  .page{display:none}
+  .page.active{display:block}
+
+  /* STATS */
+  .stats-grid{display:grid;grid-template-columns:repeat(6,1fr);gap:12px;margin-bottom:24px}
+  @media(max-width:1100px){.stats-grid{grid-template-columns:repeat(3,1fr)}}
+  @media(max-width:600px){.stats-grid{grid-template-columns:repeat(2,1fr)}}
+  .stat-card{background:var(--bg2);border:1px solid var(--border);border-radius:10px;padding:14px 16px}
+  .stat-label{font-size:11px;color:var(--text3);text-transform:uppercase;letter-spacing:0.8px;margin-bottom:6px}
+  .stat-val{font-size:22px;font-weight:700;font-family:'IBM Plex Mono',monospace;word-break:break-all}
+  .stat-val.green{color:var(--green)}
+  .stat-val.red{color:var(--red)}
+  .stat-val.gold{color:var(--gold)}
+  .stat-sub{font-size:11px;color:var(--text3);margin-top:3px}
+
+  /* CHARTS ROW */
+  .charts-row{display:grid;grid-template-columns:2fr 1fr;gap:16px;margin-bottom:24px}
+  @media(max-width:800px){.charts-row{grid-template-columns:1fr}}
+  .chart-card{background:var(--bg2);border:1px solid var(--border);border-radius:10px;padding:18px}
+  .chart-title{font-size:11px;color:var(--text2);text-transform:uppercase;letter-spacing:0.8px;margin-bottom:14px}
+
+  /* STRATEGY */
+  .strategy-section{margin-bottom:24px}
+  .section-title{font-size:11px;color:var(--text2);text-transform:uppercase;letter-spacing:0.8px;margin-bottom:12px}
+  .strategy-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(210px,1fr));gap:12px}
+  .strategy-card{background:var(--bg2);border:1px solid var(--border);border-radius:10px;padding:14px}
+  .strat-name{font-size:14px;font-weight:700;margin-bottom:10px}
+  .strat-row{display:flex;justify-content:space-between;font-size:12px;color:var(--text2);padding:3px 0}
+  .strat-row span:last-child{color:var(--text);font-family:'IBM Plex Mono',monospace}
+  .strat-bar{height:3px;background:var(--bg4);border-radius:2px;margin-top:10px;overflow:hidden}
+  .strat-bar-fill{height:100%;border-radius:2px;transition:width 0.5s}
+
+  /* JOURNAL */
+  .filters{display:flex;gap:10px;margin-bottom:16px;flex-wrap:wrap;align-items:center}
+  .filter-select,.filter-input{background:var(--bg2);border:1px solid var(--border);color:var(--text);padding:7px 12px;border-radius:6px;font-family:'Syne',sans-serif;font-size:13px;cursor:pointer;outline:none}
+  .filter-input{width:170px}
+  .filter-input::placeholder{color:var(--text3)}
+  .export-btn{background:var(--bg3);border:1px solid var(--border2);color:var(--text2);padding:7px 16px;border-radius:6px;cursor:pointer;font-family:'Syne',sans-serif;font-size:13px;margin-left:auto;transition:all 0.15s}
+  .export-btn:hover{color:var(--text);border-color:var(--text2)}
+
+  .trade-log{background:var(--bg2);border:1px solid var(--border);border-radius:10px;overflow:hidden;overflow-x:auto}
+  .log-header{display:grid;grid-template-columns:90px 80px 65px 100px 100px 100px 70px 75px 1fr 80px;gap:8px;padding:10px 18px;border-bottom:1px solid var(--border);background:var(--bg3);min-width:900px}
+  .log-header span{font-size:10px;color:var(--text3);text-transform:uppercase;letter-spacing:0.6px}
+  .log-row{display:grid;grid-template-columns:90px 80px 65px 100px 100px 100px 70px 75px 1fr 80px;gap:8px;padding:12px 18px;border-bottom:1px solid var(--border);align-items:center;transition:background 0.1s;min-width:900px}
+  .log-row:hover{background:var(--bg3)}
+  .log-row:last-child{border-bottom:none}
+
+  .tag{display:inline-block;padding:2px 8px;border-radius:4px;font-size:11px;font-weight:700}
+  .tag.long{background:var(--green2);color:var(--green)}
+  .tag.short{background:var(--red2);color:var(--red)}
+  .tag.win{background:var(--green2);color:var(--green)}
+  .tag.loss{background:var(--red2);color:var(--red)}
+  .tag.be{background:var(--bg4);color:var(--text2)}
+  .emotion-tag{display:inline-block;padding:2px 7px;border-radius:4px;font-size:10px;background:var(--purple2);color:var(--purple);margin-right:3px}
+  .strat-tag{display:inline-block;padding:2px 7px;border-radius:4px;font-size:10px;background:var(--blue2);color:var(--blue);margin-right:3px}
+  .mistake-tag{display:inline-block;padding:2px 7px;border-radius:4px;font-size:10px;background:#3a2a10;color:#ffd600;margin-right:3px}
+  .pnl-pos{color:var(--green);font-family:'IBM Plex Mono',monospace;font-size:13px}
+  .pnl-neg{color:var(--red);font-family:'IBM Plex Mono',monospace;font-size:13px}
+  .del-btn{background:none;border:none;color:var(--text3);cursor:pointer;font-size:15px;padding:3px 8px;border-radius:4px;transition:all 0.15s;font-family:'Syne',sans-serif}
+  .del-btn:hover{color:var(--red);background:var(--red2)}
+
+  /* ANALYTICS */
+  .analytics-grid{display:grid;grid-template-columns:1fr 1fr;gap:16px;margin-bottom:16px}
+  @media(max-width:800px){.analytics-grid{grid-template-columns:1fr}}
+  .big-chart-card{background:var(--bg2);border:1px solid var(--border);border-radius:10px;padding:18px}
+
+  /* MODAL */
+  .modal-overlay{position:fixed;inset:0;background:rgba(0,0,0,0.8);z-index:1000;display:none;align-items:center;justify-content:center;padding:20px}
+  .modal-overlay.open{display:flex}
+  .modal{background:var(--bg2);border:1px solid var(--border2);border-radius:14px;width:100%;max-width:640px;max-height:92vh;overflow-y:auto}
+  .modal-header{padding:20px 24px 16px;border-bottom:1px solid var(--border);display:flex;justify-content:space-between;align-items:center;position:sticky;top:0;background:var(--bg2);z-index:10}
+  .modal-title{font-size:16px;font-weight:700}
+  .close-btn{background:none;border:none;color:var(--text2);font-size:22px;cursor:pointer;padding:2px 8px;border-radius:6px;line-height:1}
+  .close-btn:hover{color:var(--text);background:var(--bg3)}
+  .modal-body{padding:22px 24px}
+  .form-grid{display:grid;grid-template-columns:1fr 1fr;gap:14px}
+  @media(max-width:500px){.form-grid{grid-template-columns:1fr}}
+  .form-group{display:flex;flex-direction:column;gap:5px}
+  .form-group.full{grid-column:1/-1}
+  .form-label{font-size:10px;color:var(--text2);text-transform:uppercase;letter-spacing:0.8px}
+  .form-input,.form-select,.form-textarea{background:var(--bg3);border:1px solid var(--border);color:var(--text);padding:9px 12px;border-radius:7px;font-family:'Syne',sans-serif;font-size:13px;outline:none;transition:border-color 0.15s;width:100%}
+  .form-input:focus,.form-select:focus,.form-textarea:focus{border-color:var(--green)}
+  .form-textarea{min-height:72px;resize:vertical}
+  .form-footer{padding:16px 24px;border-top:1px solid var(--border);display:flex;gap:10px;justify-content:flex-end;position:sticky;bottom:0;background:var(--bg2)}
+  .submit-btn{background:var(--green);color:#000;border:none;padding:9px 26px;border-radius:7px;cursor:pointer;font-family:'Syne',sans-serif;font-size:14px;font-weight:700;transition:all 0.15s}
+  .submit-btn:hover{background:var(--green3)}
+  .cancel-btn{background:var(--bg3);border:1px solid var(--border);color:var(--text2);padding:9px 18px;border-radius:7px;cursor:pointer;font-family:'Syne',sans-serif;font-size:13px;transition:all 0.15s}
+  .cancel-btn:hover{color:var(--text)}
+
+  .empty{text-align:center;padding:48px;color:var(--text3);font-size:13px}
+  ::-webkit-scrollbar{width:6px;height:6px}
+  ::-webkit-scrollbar-track{background:var(--bg)}
+  ::-webkit-scrollbar-thumb{background:var(--border2);border-radius:3px}
+
+  /* Toast */
+  .toast{position:fixed;bottom:28px;right:28px;background:var(--green);color:#000;padding:10px 20px;border-radius:8px;font-weight:700;font-size:13px;z-index:9999;opacity:0;transform:translateY(10px);transition:all 0.3s;pointer-events:none}
+  .toast.show{opacity:1;transform:translateY(0)}
+</style>
+</head>
+<body>
+
+<div class="header">
+  <div class="logo">
+    <div class="logo-main"><span>TradeViral</span> Forex</div>
+    <div class="logo-sub">Trading Journal</div>
+  </div>
+  <nav class="nav">
+    <button class="nav-btn active" onclick="showPage('dashboard',this)">Dashboard</button>
+    <button class="nav-btn" onclick="showPage('journal',this)">Journal</button>
+    <button class="nav-btn" onclick="showPage('analytics',this)">Analytics</button>
+  </nav>
+  <button class="add-btn" onclick="openModal()">+ Add Trade</button>
+</div>
+
+<div class="content">
+
+  <!-- DASHBOARD -->
+  <div class="page active" id="page-dashboard">
+    <div class="stats-grid" id="stats-grid"></div>
+    <div class="charts-row">
+      <div class="chart-card">
+        <div class="chart-title">Equity Curve</div>
+        <div style="position:relative;height:190px"><canvas id="equityChart"></canvas></div>
+      </div>
+      <div class="chart-card">
+        <div class="chart-title">Win / Loss / Breakeven</div>
+        <div style="position:relative;height:190px"><canvas id="donutChart"></canvas></div>
+      </div>
+    </div>
+    <div class="strategy-section">
+      <div class="section-title">Strategy Performance</div>
+      <div class="strategy-grid" id="strategy-grid"></div>
+    </div>
+  </div>
+
+  <!-- JOURNAL -->
+  <div class="page" id="page-journal">
+    <div class="filters">
+      <input class="filter-input" id="search-input" placeholder="Search symbol..." oninput="renderJournal()">
+      <select class="filter-select" id="filter-dir" onchange="renderJournal()">
+        <option value="">All Directions</option><option>Long</option><option>Short</option>
+      </select>
+      <select class="filter-select" id="filter-result" onchange="renderJournal()">
+        <option value="">All Results</option><option>Win</option><option>Loss</option><option>BE</option>
+      </select>
+      <select class="filter-select" id="filter-strat" onchange="renderJournal()">
+        <option value="">All Strategies</option>
+      </select>
+      <select class="filter-select" id="filter-emotion" onchange="renderJournal()">
+        <option value="">All Emotions</option>
+        <option>Calm</option><option>FOMO</option><option>Revenge</option><option>Overconfident</option><option>Hesitant</option>
+      </select>
+      <button class="export-btn" onclick="exportCSV()">⬇ Export CSV</button>
+    </div>
+    <div class="trade-log">
+      <div class="log-header">
+        <span>Date</span><span>Symbol</span><span>Dir</span><span>Entry</span><span>Exit</span><span>P&L</span><span>R:R</span><span>Result</span><span>Tags</span><span>Action</span>
+      </div>
+      <div id="journal-rows"></div>
+    </div>
+  </div>
+
+  <!-- ANALYTICS -->
+  <div class="page" id="page-analytics">
+    <div class="analytics-grid">
+      <div class="big-chart-card">
+        <div class="chart-title">Monthly P&L</div>
+        <div style="position:relative;height:230px"><canvas id="monthlyChart"></canvas></div>
+      </div>
+      <div class="big-chart-card">
+        <div class="chart-title">Drawdown Curve</div>
+        <div style="position:relative;height:230px"><canvas id="ddChart"></canvas></div>
+      </div>
+    </div>
+    <div class="analytics-grid">
+      <div class="big-chart-card">
+        <div class="chart-title">P&L by Day of Week</div>
+        <div style="position:relative;height:210px"><canvas id="dowChart"></canvas></div>
+      </div>
+      <div class="big-chart-card">
+        <div class="chart-title">Emotion vs Win Rate</div>
+        <div style="position:relative;height:210px"><canvas id="emotionChart"></canvas></div>
+      </div>
+    </div>
+    <div class="big-chart-card" style="margin-bottom:24px">
+      <div class="chart-title">Risk:Reward Distribution</div>
+      <div style="position:relative;height:190px"><canvas id="rrChart"></canvas></div>
+    </div>
+  </div>
+
+</div>
+
+<!-- ADD TRADE MODAL -->
+<div class="modal-overlay" id="modal" onclick="if(event.target===this)closeModal()">
+  <div class="modal">
+    <div class="modal-header">
+      <span class="modal-title">Log New Trade</span>
+      <button class="close-btn" onclick="closeModal()">×</button>
+    </div>
+    <div class="modal-body">
+      <div class="form-grid">
+        <div class="form-group">
+          <label class="form-label">Pair / Symbol</label>
+          <input class="form-input" id="f-symbol" placeholder="EURUSD, XAUUSD, GBPJPY...">
+        </div>
+        <div class="form-group">
+          <label class="form-label">Date</label>
+          <input class="form-input" id="f-date" type="date">
+        </div>
+        <div class="form-group">
+          <label class="form-label">Direction</label>
+          <select class="form-select" id="f-dir"><option>Long</option><option>Short</option></select>
+        </div>
+        <div class="form-group">
+          <label class="form-label">Lot Size</label>
+          <input class="form-input" id="f-qty" type="number" placeholder="0.10" step="0.01" min="0">
+        </div>
+        <div class="form-group">
+          <label class="form-label">Entry Price</label>
+          <input class="form-input" id="f-entry" type="number" placeholder="1.08500" step="0.00001">
+        </div>
+        <div class="form-group">
+          <label class="form-label">Exit Price</label>
+          <input class="form-input" id="f-exit" type="number" placeholder="1.09000" step="0.00001">
+        </div>
+        <div class="form-group">
+          <label class="form-label">Stop Loss</label>
+          <input class="form-input" id="f-sl" type="number" placeholder="1.08200" step="0.00001">
+        </div>
+        <div class="form-group">
+          <label class="form-label">Take Profit</label>
+          <input class="form-input" id="f-target" type="number" placeholder="1.09500" step="0.00001">
+        </div>
+        <div class="form-group">
+          <label class="form-label">P&L ($)</label>
+          <input class="form-input" id="f-pnl" type="number" placeholder="Enter actual P&L" step="0.01">
+        </div>
+        <div class="form-group">
+          <label class="form-label">Strategy</label>
+          <input class="form-input" id="f-strategy" placeholder="London Breakout, VWAP...">
+        </div>
+        <div class="form-group">
+          <label class="form-label">Emotion State</label>
+          <select class="form-select" id="f-emotion">
+            <option>Calm</option><option>FOMO</option><option>Revenge</option><option>Overconfident</option><option>Hesitant</option>
+          </select>
+        </div>
+        <div class="form-group">
+          <label class="form-label">Mistake Tag</label>
+          <select class="form-select" id="f-mistake">
+            <option value="">None</option>
+            <option>Early Entry</option><option>Late Entry</option><option>Moved SL</option>
+            <option>Overtraded</option><option>Sized Too Big</option><option>Chased</option>
+          </select>
+        </div>
+        <div class="form-group">
+          <label class="form-label">Setup Quality (1–5)</label>
+          <input class="form-input" id="f-quality" type="number" min="1" max="5" placeholder="5">
+        </div>
+        <div class="form-group full">
+          <label class="form-label">Notes / Observations</label>
+          <textarea class="form-textarea" id="f-notes" placeholder="What went well? What could improve? Market conditions?"></textarea>
+        </div>
+      </div>
+    </div>
+    <div class="form-footer">
+      <button class="cancel-btn" onclick="closeModal()">Cancel</button>
+      <button class="submit-btn" onclick="addTrade()">Save Trade</button>
+    </div>
+  </div>
+</div>
+
+<div class="toast" id="toast"></div>
+
+<script>
+// ===================== DATA =====================
+const STORE_KEY = 'tradeviral_forex_v1';
+let trades = [];
+try { trades = JSON.parse(localStorage.getItem(STORE_KEY) || '[]'); } catch(e) { trades = []; }
+
+function saveTrades() {
+  try { localStorage.setItem(STORE_KEY, JSON.stringify(trades)); } catch(e) {}
+}
+
+function calcRR(t) {
+  if (!t.sl || !t.target || !t.entry) return null;
+  const risk = Math.abs(t.entry - t.sl);
+  const reward = Math.abs(t.target - t.entry);
+  if (!risk) return null;
+  return +(reward / risk).toFixed(2);
+}
+
+function result(t) {
+  if (t.pnl > 0) return 'Win';
+  if (t.pnl < 0) return 'Loss';
+  return 'BE';
+}
+
+// ===================== TOAST =====================
+function showToast(msg) {
+  const t = document.getElementById('toast');
+  t.textContent = msg;
+  t.classList.add('show');
+  setTimeout(() => t.classList.remove('show'), 2200);
+}
+
+// ===================== PAGES =====================
+let currentPage = 'dashboard';
+let charts = {};
+
+function showPage(p, btn) {
+  currentPage = p;
+  document.querySelectorAll('.page').forEach(x => x.classList.remove('active'));
+  document.querySelectorAll('.nav-btn').forEach(x => x.classList.remove('active'));
+  document.getElementById('page-' + p).classList.add('active');
+  btn.classList.add('active');
+  setTimeout(() => renderAll(), 60);
+}
+
+function renderAll() {
+  renderStats();
+  renderEquity();
+  renderDonut();
+  renderStrategyGrid();
+  if (currentPage === 'journal') renderJournal();
+  if (currentPage === 'analytics') renderAnalytics();
+}
+
+// ===================== STATS =====================
+function renderStats() {
+  const sorted = [...trades].sort((a, b) => a.date.localeCompare(b.date));
+  const totalPnl = +sorted.reduce((s, t) => s + t.pnl, 0).toFixed(2);
+  const wins = trades.filter(t => t.pnl > 0).length;
+  const losses = trades.filter(t => t.pnl < 0).length;
+  const wr = trades.length ? +((wins / trades.length) * 100).toFixed(1) : 0;
+  const avgWin = wins ? +(trades.filter(t => t.pnl > 0).reduce((s, t) => s + t.pnl, 0) / wins).toFixed(2) : 0;
+  const avgLoss = losses ? +(Math.abs(trades.filter(t => t.pnl < 0).reduce((s, t) => s + t.pnl, 0) / losses)).toFixed(2) : 0;
+  const pf = (avgLoss && losses) ? +((avgWin * wins) / (avgLoss * losses)).toFixed(2) : 0;
+  let peak = 0, maxDD = 0, eq = 0;
+  sorted.forEach(t => {
+    eq += t.pnl;
+    if (eq > peak) peak = eq;
+    const dd = peak - eq;
+    if (dd > maxDD) maxDD = dd;
+  });
+
+  document.getElementById('stats-grid').innerHTML = `
+    <div class="stat-card"><div class="stat-label">Total P&L</div><div class="stat-val ${totalPnl >= 0 ? 'green' : 'red'}">$${totalPnl.toLocaleString()}</div><div class="stat-sub">${trades.length} trades logged</div></div>
+    <div class="stat-card"><div class="stat-label">Win Rate</div><div class="stat-val gold">${wr}%</div><div class="stat-sub">${wins}W / ${losses}L</div></div>
+    <div class="stat-card"><div class="stat-label">Avg Win</div><div class="stat-val green">$${avgWin.toLocaleString()}</div><div class="stat-sub">per winning trade</div></div>
+    <div class="stat-card"><div class="stat-label">Avg Loss</div><div class="stat-val red">$${avgLoss.toLocaleString()}</div><div class="stat-sub">per losing trade</div></div>
+    <div class="stat-card"><div class="stat-label">Profit Factor</div><div class="stat-val ${pf >= 1 ? 'green' : 'red'}">${pf}</div><div class="stat-sub">&gt;1.5 is strong</div></div>
+    <div class="stat-card"><div class="stat-label">Max Drawdown</div><div class="stat-val red">$${maxDD.toLocaleString()}</div><div class="stat-sub">peak to trough</div></div>
+  `;
+}
+
+// ===================== EQUITY =====================
+function renderEquity() {
+  const sorted = [...trades].sort((a, b) => a.date.localeCompare(b.date));
+  let eq = 0;
+  const data = sorted.map(t => { eq += t.pnl; return +eq.toFixed(2); });
+  destroyChart('equityChart');
+  if (!sorted.length) return;
+  const ctx = document.getElementById('equityChart').getContext('2d');
+  charts['equityChart'] = new Chart(ctx, {
+    type: 'line',
+    data: {
+      labels: sorted.map(t => t.date.slice(5)),
+      datasets: [{
+        data,
+        borderColor: '#00e676',
+        borderWidth: 2,
+        fill: { target: 'origin', above: 'rgba(0,230,118,0.07)', below: 'rgba(255,82,82,0.07)' },
+        tension: 0.35,
+        pointRadius: 0,
+        pointHoverRadius: 5,
+        pointBackgroundColor: '#00e676'
+      }]
+    },
+    options: {
+      responsive: true, maintainAspectRatio: false,
+      plugins: { legend: { display: false }, tooltip: { mode: 'index', intersect: false, backgroundColor: '#1a1a24', titleColor: '#9090a8', bodyColor: '#e8e8f0', borderColor: '#2a2a38', borderWidth: 1 } },
+      scales: {
+        x: { grid: { color: '#1a1a24' }, ticks: { color: '#5a5a70', maxTicksLimit: 8, font: { size: 10 } } },
+        y: { grid: { color: '#1a1a24' }, ticks: { color: '#5a5a70', font: { size: 10 }, callback: v => '$' + v.toLocaleString() } }
+      }
+    }
+  });
+}
+
+// ===================== DONUT =====================
+function renderDonut() {
+  const wins = trades.filter(t => t.pnl > 0).length;
+  const losses = trades.filter(t => t.pnl < 0).length;
+  const be = trades.filter(t => t.pnl === 0).length;
+  destroyChart('donutChart');
+  if (!trades.length) return;
+  const ctx = document.getElementById('donutChart').getContext('2d');
+  charts['donutChart'] = new Chart(ctx, {
+    type: 'doughnut',
+    data: {
+      labels: ['Win', 'Loss', 'Breakeven'],
+      datasets: [{ data: [wins, losses, be], backgroundColor: ['#00e676', '#ff5252', '#3a3a50'], borderWidth: 0, hoverOffset: 6 }]
+    },
+    options: {
+      responsive: true, maintainAspectRatio: false, cutout: '72%',
+      plugins: {
+        legend: { position: 'bottom', labels: { color: '#9090a8', boxWidth: 10, padding: 14, font: { size: 11 } } },
+        tooltip: { backgroundColor: '#1a1a24', titleColor: '#9090a8', bodyColor: '#e8e8f0', borderColor: '#2a2a38', borderWidth: 1 }
+      }
+    }
+  });
+}
+
+// ===================== STRATEGY GRID =====================
+function renderStrategyGrid() {
+  const strats = {};
+  trades.forEach(t => {
+    if (!t.strategy) return;
+    if (!strats[t.strategy]) strats[t.strategy] = { wins: 0, losses: 0, pnl: 0, rrs: [] };
+    const s = strats[t.strategy];
+    if (t.pnl > 0) s.wins++; else if (t.pnl < 0) s.losses++;
+    s.pnl += t.pnl;
+    const rr = calcRR(t); if (rr) s.rrs.push(rr);
+  });
+  const keys = Object.keys(strats);
+  if (!keys.length) { document.getElementById('strategy-grid').innerHTML = '<div class="empty">Add trades with strategy names to see performance here</div>'; return; }
+  document.getElementById('strategy-grid').innerHTML = keys.map(k => {
+    const s = strats[k];
+    const total = s.wins + s.losses;
+    const wr = total ? +((s.wins / total) * 100).toFixed(1) : 0;
+    const avgRR = s.rrs.length ? +(s.rrs.reduce((a, b) => a + b, 0) / s.rrs.length).toFixed(2) : '—';
+    const pnl = +s.pnl.toFixed(2);
+    const color = wr >= 50 ? '#00e676' : '#ff5252';
+    return `<div class="strategy-card">
+      <div class="strat-name">${k}</div>
+      <div class="strat-row"><span>Win Rate</span><span>${wr}%</span></div>
+      <div class="strat-row"><span>Total Trades</span><span>${total}</span></div>
+      <div class="strat-row"><span>Net P&L</span><span style="color:${pnl >= 0 ? '#00e676' : '#ff5252'}">$${pnl.toLocaleString()}</span></div>
+      <div class="strat-row"><span>Avg R:R</span><span>${avgRR}</span></div>
+      <div class="strat-bar"><div class="strat-bar-fill" style="width:${wr}%;background:${color}"></div></div>
+    </div>`;
+  }).join('');
+}
+
+// ===================== JOURNAL =====================
+function renderJournal() {
+  const search = document.getElementById('search-input').value.toLowerCase();
+  const dir = document.getElementById('filter-dir').value;
+  const res = document.getElementById('filter-result').value;
+  const strat = document.getElementById('filter-strat').value;
+  const emotion = document.getElementById('filter-emotion').value;
+
+  const allStrats = [...new Set(trades.map(t => t.strategy).filter(Boolean))];
+  const sel = document.getElementById('filter-strat');
+  const cur = sel.value;
+  sel.innerHTML = '<option value="">All Strategies</option>' + allStrats.map(s => `<option ${s === cur ? 'selected' : ''}>${s}</option>`).join('');
+
+  let filtered = [...trades].sort((a, b) => b.date.localeCompare(a.date));
+  if (search) filtered = filtered.filter(t => t.symbol.toLowerCase().includes(search));
+  if (dir) filtered = filtered.filter(t => t.dir === dir);
+  if (res) filtered = filtered.filter(t => result(t) === res);
+  if (strat) filtered = filtered.filter(t => t.strategy === strat);
+  if (emotion) filtered = filtered.filter(t => t.emotion === emotion);
+
+  if (!filtered.length) {
+    document.getElementById('journal-rows').innerHTML = '<div class="empty">No trades match your filters</div>';
+    return;
+  }
+
+  document.getElementById('journal-rows').innerHTML = filtered.map(t => {
+    const r = result(t);
+    const rr = calcRR(t);
+    const pnlClass = t.pnl > 0 ? 'pnl-pos' : 'pnl-neg';
+    const tags = [
+      t.strategy ? `<span class="strat-tag">${t.strategy}</span>` : '',
+      t.emotion && t.emotion !== 'Calm' ? `<span class="emotion-tag">${t.emotion}</span>` : '',
+      t.mistake ? `<span class="mistake-tag">${t.mistake}</span>` : ''
+    ].filter(Boolean).join('');
+    return `<div class="log-row">
+      <span class="mono" style="font-size:12px;color:var(--text2)">${t.date}</span>
+      <span style="font-weight:700">${t.symbol}</span>
+      <span><span class="tag ${t.dir.toLowerCase()}">${t.dir}</span></span>
+      <span class="mono" style="font-size:12px">${t.entry}</span>
+      <span class="mono" style="font-size:12px">${t.exit}</span>
+      <span class="${pnlClass}">${t.pnl >= 0 ? '+' : ''}$${t.pnl.toLocaleString()}</span>
+      <span style="font-family:monospace;font-size:12px;color:var(--text2)">${rr || '—'}</span>
+      <span><span class="tag ${r.toLowerCase()}">${r}</span></span>
+      <span style="font-size:11px">${tags || '<span style="color:var(--text3)">—</span>'}</span>
+      <span><button class="del-btn" onclick="deleteTrade(${t.id})" title="Delete trade">✕</button></span>
+    </div>`;
+  }).join('');
+}
+
+function deleteTrade(id) {
+  if (!confirm('Delete this trade?')) return;
+  trades = trades.filter(t => t.id !== id);
+  saveTrades();
+  renderAll();
+  renderJournal();
+  showToast('Trade deleted');
+}
+
+// ===================== ANALYTICS =====================
+function renderAnalytics() {
+  renderMonthly(); renderDrawdown(); renderDOW(); renderEmotion(); renderRR();
+}
+
+function renderMonthly() {
+  const monthly = {};
+  trades.forEach(t => { const m = t.date.slice(0, 7); monthly[m] = (monthly[m] || 0) + t.pnl; });
+  const keys = Object.keys(monthly).sort();
+  destroyChart('monthlyChart');
+  if (!keys.length) return;
+  const ctx = document.getElementById('monthlyChart').getContext('2d');
+  const vals = keys.map(k => +monthly[k].toFixed(2));
+  charts['monthlyChart'] = new Chart(ctx, {
+    type: 'bar',
+    data: { labels: keys.map(k => k.slice(5)), datasets: [{ data: vals, backgroundColor: vals.map(v => v >= 0 ? 'rgba(0,230,118,0.7)' : 'rgba(255,82,82,0.7)'), borderRadius: 5 }] },
+    options: { responsive: true, maintainAspectRatio: false, plugins: { legend: { display: false } }, scales: { x: { grid: { color: '#1a1a24' }, ticks: { color: '#5a5a70', font: { size: 10 } } }, y: { grid: { color: '#1a1a24' }, ticks: { color: '#5a5a70', font: { size: 10 }, callback: v => '$' + v } } } }
+  });
+}
+
+function renderDrawdown() {
+  const sorted = [...trades].sort((a, b) => a.date.localeCompare(b.date));
+  let eq = 0, peak = 0;
+  const dd = sorted.map(t => { eq += t.pnl; if (eq > peak) peak = eq; return +Math.min(0, eq - peak).toFixed(2); });
+  destroyChart('ddChart');
+  if (!sorted.length) return;
+  const ctx = document.getElementById('ddChart').getContext('2d');
+  charts['ddChart'] = new Chart(ctx, {
+    type: 'line',
+    data: { labels: sorted.map(t => t.date.slice(5)), datasets: [{ data: dd, borderColor: '#ff5252', borderWidth: 1.5, fill: true, backgroundColor: 'rgba(255,82,82,0.07)', tension: 0.3, pointRadius: 0 }] },
+    options: { responsive: true, maintainAspectRatio: false, plugins: { legend: { display: false } }, scales: { x: { grid: { color: '#1a1a24' }, ticks: { color: '#5a5a70', maxTicksLimit: 8, font: { size: 10 } } }, y: { grid: { color: '#1a1a24' }, ticks: { color: '#5a5a70', font: { size: 10 }, callback: v => '$' + v } } } }
+  });
+}
+
+function renderDOW() {
+  const days = ['Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat', 'Sun'];
+  const pnl = [0, 0, 0, 0, 0, 0, 0], cnt = [0, 0, 0, 0, 0, 0, 0];
+  trades.forEach(t => { const d = new Date(t.date).getDay(); const i = (d + 6) % 7; pnl[i] += t.pnl; cnt[i]++; });
+  destroyChart('dowChart');
+  const ctx = document.getElementById('dowChart').getContext('2d');
+  const vals = pnl.map((v, i) => cnt[i] ? +v.toFixed(2) : null);
+  charts['dowChart'] = new Chart(ctx, {
+    type: 'bar',
+    data: { labels: days, datasets: [{ data: vals, backgroundColor: vals.map(v => v === null ? '#2a2a38' : v >= 0 ? 'rgba(0,230,118,0.7)' : 'rgba(255,82,82,0.7)'), borderRadius: 5 }] },
+    options: { responsive: true, maintainAspectRatio: false, plugins: { legend: { display: false } }, scales: { x: { grid: { color: '#1a1a24' }, ticks: { color: '#5a5a70', font: { size: 11 } } }, y: { grid: { color: '#1a1a24' }, ticks: { color: '#5a5a70', font: { size: 10 }, callback: v => '$' + v } } } }
+  });
+}
+
+function renderEmotion() {
+  const em = {};
+  trades.forEach(t => {
+    if (!t.emotion) return;
+    if (!em[t.emotion]) em[t.emotion] = { wins: 0, total: 0 };
+    em[t.emotion].total++;
+    if (t.pnl > 0) em[t.emotion].wins++;
+  });
+  const keys = Object.keys(em);
+  destroyChart('emotionChart');
+  if (!keys.length) return;
+  const ctx = document.getElementById('emotionChart').getContext('2d');
+  const wrs = keys.map(k => +(em[k].wins / em[k].total * 100).toFixed(1));
+  charts['emotionChart'] = new Chart(ctx, {
+    type: 'bar',
+    data: { labels: keys, datasets: [{ label: 'Win Rate %', data: wrs, backgroundColor: wrs.map(v => v >= 50 ? 'rgba(0,230,118,0.7)' : 'rgba(255,82,82,0.7)'), borderRadius: 5 }] },
+    options: { responsive: true, maintainAspectRatio: false, plugins: { legend: { display: false } }, scales: { x: { grid: { color: '#1a1a24' }, ticks: { color: '#5a5a70', font: { size: 11 } } }, y: { min: 0, max: 100, grid: { color: '#1a1a24' }, ticks: { color: '#5a5a70', font: { size: 10 }, callback: v => v + '%' } } } }
+  });
+}
+
+function renderRR() {
+  const rrs = trades.map(calcRR).filter(Boolean);
+  destroyChart('rrChart');
+  if (!rrs.length) return;
+  const buckets = {};
+  rrs.forEach(r => { const b = Math.floor(r * 2) / 2; buckets[b] = (buckets[b] || 0) + 1; });
+  const keys = Object.keys(buckets).map(Number).sort((a, b) => a - b);
+  const ctx = document.getElementById('rrChart').getContext('2d');
+  charts['rrChart'] = new Chart(ctx, {
+    type: 'bar',
+    data: { labels: keys.map(k => k.toFixed(1) + ':1'), datasets: [{ data: keys.map(k => buckets[k]), backgroundColor: 'rgba(68,138,255,0.65)', borderRadius: 5 }] },
+    options: { responsive: true, maintainAspectRatio: false, plugins: { legend: { display: false } }, scales: { x: { grid: { color: '#1a1a24' }, ticks: { color: '#5a5a70', font: { size: 10 } } }, y: { grid: { color: '#1a1a24' }, ticks: { color: '#5a5a70', font: { size: 10 }, stepSize: 1 } } } }
+  });
+}
+
+function destroyChart(id) { if (charts[id]) { charts[id].destroy(); delete charts[id]; } }
+
+// ===================== MODAL =====================
+function openModal() {
+  document.getElementById('modal').classList.add('open');
+  document.getElementById('f-date').value = new Date().toISOString().split('T')[0];
+}
+function closeModal() {
+  document.getElementById('modal').classList.remove('open');
+}
+
+function addTrade() {
+  const sym = document.getElementById('f-symbol').value.trim().toUpperCase();
+  const date = document.getElementById('f-date').value;
+  const entry = parseFloat(document.getElementById('f-entry').value);
+  const exit = parseFloat(document.getElementById('f-exit').value);
+  const qty = parseFloat(document.getElementById('f-qty').value) || 1;
+  const pnlInput = parseFloat(document.getElementById('f-pnl').value);
+
+  if (!sym || !date || isNaN(entry) || isNaN(exit)) {
+    alert('Please fill in: Symbol, Date, Entry Price, and Exit Price.');
+    return;
+  }
+
+  const dir = document.getElementById('f-dir').value;
+  const sl = parseFloat(document.getElementById('f-sl').value) || 0;
+  const target = parseFloat(document.getElementById('f-target').value) || 0;
+  const pnl = !isNaN(pnlInput) ? pnlInput : +((dir === 'Long' ? exit - entry : entry - exit) * qty * 100000).toFixed(2);
+
+  trades.push({
+    id: Date.now(),
+    symbol: sym, date, dir, qty, entry, exit, sl, target, pnl,
+    strategy: document.getElementById('f-strategy').value.trim(),
+    emotion: document.getElementById('f-emotion').value,
+    mistake: document.getElementById('f-mistake').value,
+    quality: parseInt(document.getElementById('f-quality').value) || 3,
+    notes: document.getElementById('f-notes').value
+  });
+
+  saveTrades();
+  closeModal();
+  ['f-symbol','f-entry','f-exit','f-qty','f-sl','f-target','f-strategy','f-notes','f-pnl'].forEach(id => document.getElementById(id).value = '');
+  document.getElementById('f-mistake').value = '';
+  renderAll();
+  if (currentPage === 'journal') renderJournal();
+  showToast('Trade saved!');
+}
+
+// ===================== EXPORT =====================
+function exportCSV() {
+  if (!trades.length) { alert('No trades to export.'); return; }
+  const headers = ['Date','Symbol','Direction','Lots','Entry','Exit','PnL','SL','TP','Strategy','Emotion','Mistake','Quality','Notes'];
+  const rows = trades.map(t => [t.date,t.symbol,t.dir,t.qty,t.entry,t.exit,t.pnl,t.sl,t.target,t.strategy,t.emotion,t.mistake,t.quality,`"${(t.notes||'').replace(/"/g,'""')}"`].join(','));
+  const csv = 'data:text/csv;charset=utf-8,' + [headers.join(','), ...rows].join('\n');
+  const a = document.createElement('a');
+  a.href = encodeURI(csv);
+  a.download = 'tradeviral_forex_' + new Date().toISOString().slice(0,10) + '.csv';
+  a.click();
+  showToast('CSV exported!');
+}
+
+// ===================== INIT =====================
+window.addEventListener('DOMContentLoaded', () => {
+  setTimeout(() => renderAll(), 100);
+});
+</script>
+</body>
+</html>
